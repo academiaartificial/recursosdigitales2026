@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería de Imágenes - The Guardian</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .image-transition {
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .fullscreen-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: crosshair;
+        }
+
+        .fullscreen-image-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            cursor: crosshair;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .drawing-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: auto;
+        }
+
+        .fullscreen-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            image-rendering: optimizeQuality;
+            cursor: crosshair;
+        }
+
+        .controls-panel {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            z-index: 1001;
+            gap: 15px;
+        }
+
+        .tools-panel {
+            position: fixed;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            z-index: 1001;
+            gap: 10px;
+            background-color: rgba(51, 51, 51, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+            align-items: center;
+        }
+
+        .color-picker {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .color-option {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+
+        .color-option:hover, .color-option.selected {
+            transform: scale(1.2);
+            border-color: white;
+        }
+
+        .control-btn, .tool-btn {
+            color: white;
+            background-color: rgba(51, 51, 51, 0.7);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 5px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .control-btn:hover, .tool-btn:hover {
+            background-color: rgba(112, 112, 112, 0.9);
+            transform: scale(1.1);
+        }
+        
+        .control-btn svg, .tool-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .thumbnail-container {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 0;
+            background-color: #f8f8f8;
+            overflow-x: auto;
+            padding: 30px 0;
+        }
+
+        .thumbnail {
+            width: 60px;
+            height: 40px;
+            object-fit: cover;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .thumbnail:hover, .thumbnail.active {
+            opacity: 1;
+            border-color: #3b82f6;
+            transform: scale(1.05);
+        }
+
+        .main-image-container {
+            width: 100%;
+            height: 50vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .problem-title {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .main-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .main-image:hover {
+            transform: scale(1.02);
+        }
+
+        .image-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+            padding: 20px 15px;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .controls-panel, .tools-panel {
+                right: 10px;
+                gap: 10px;
+            }
+            
+            .control-btn, .tool-btn {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .control-btn svg, .tool-btn svg {
+                width: 18px;
+                height: 18px;
+            }
+            
+            .problem-title {
+                font-size: 1.2rem;
+            }
+            
+            .main-image-container {
+                height: 40vh;
+            }
+           
+        }
+        
+        @media (max-width: 480px) {
+            .main-image-container {
+                height: 35vh;
+            }
+            
+        }
+
+        @media (max-width: 734px) {
+            .typography-grid-item-headline {
+                font-size: 26px;
+                line-height: 1.0714285714;
+                font-weight: 600;
+                letter-spacing: -0.005em;
+                font-family: SF Pro Display, SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif;
+            }
+            .headline {
+                font-size: 16px;
+                line-height: 1.0714285714;
+                font-weight: 600;
+                letter-spacing: -0.005em;
+                font-family: SF Pro Display, SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif;
+            }
+        }
+       
+
+        .headline {
+            font-size: 50px;
+            line-height: 1.07143;
+            font-weight: 600;
+            letter-spacing: -.005em;
+            font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+            background-image: linear-gradient(90deg, #0090F7 8%, #BA62FC, #F2416B, #F55600);  
+            -webkit-text-fill-color: rgba(0, 0, 0, 0);
+            
+            background-clip: text;   
+        }
+        .typography-grid-item-headline {
+            font-size: 20px;
+            line-height: 1.1904761905;
+            font-weight: 600;
+            letter-spacing: .011em;
+            font-family: SF Pro Display, SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif;
+            color: #ac08d8;
+        }
+        .subhead {
+            font-size: 28px;
+            line-height: 1.14286;
+            font-weight: 400;
+            letter-spacing: .007em;
+            font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+            margin-top: 6px;
+        }
+        .ai-gradient {
+            background: -webkit-linear-gradient(356deg, #0090F7, #BA62FC, #F2416B, #F55600);
+            background: linear-gradient(94deg, #0090F7, #BA62FC, #F2416B, #F55600);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div id="app" class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Helico Practice -->
+        <header class="container max-w-4xl mx-auto py-6 text-center">
+			<h2 class="headline">Helico Practice</h2>
+            <p class="subhead">
+              <span class="ai-gradient">Geometría 1°</span>
+            </p>
+				
+		</header>
+
+        <!-- Problema 1 -->
+        <div class="relative bg-white rounded-lg shadow-xl overflow-hidden mb-8">
+            <h3 class="typography-grid-item-headline mx-4 mb-4 mt-2">Problema 1:</h3>
+            <div class="main-image-container">
+                <div class="problem-title">Problema 1</div>
+                <img
+                    :src="problems[0].images[problems[0].currentIndex].src"
+                    :alt="problems[0].images[problems[0].currentIndex].alt"
+                    class="main-image image-transition"
+                    @click="enterFullscreen(0, problems[0].currentIndex)"
+                >
+                
+            </div>
+            
+        </div>
+
+        <!-- Problema 2 -->
+        <div class="relative bg-white rounded-lg shadow-xl overflow-hidden mb-8">
+            <h3 class="typography-grid-item-headline mx-4 mb-4 mt-2">Problema 2:</h3>
+            <div class="main-image-container">
+                <div class="problem-title">Problema 2</div>
+                <img
+                    :src="problems[1].images[problems[1].currentIndex].src"
+                    :alt="problems[1].images[problems[1].currentIndex].alt"
+                    class="main-image image-transition"
+                    @click="enterFullscreen(1, problems[1].currentIndex)"
+                >
+                
+            </div>
+            
+        </div>
+
+        <!-- Problema 3 -->
+        <div class="relative bg-white rounded-lg shadow-xl overflow-hidden mb-8">
+            <h3 class="typography-grid-item-headline mx-4 mb-4 mt-2">Problema 3:</h3>
+            <div class="main-image-container">
+                <div class="problem-title">Problema 3</div>
+                <img
+                    :src="problems[2].images[problems[2].currentIndex].src"
+                    :alt="problems[2].images[problems[2].currentIndex].alt"
+                    class="main-image image-transition"
+                    @click="enterFullscreen(2, problems[2].currentIndex)"
+                >
+                
+            </div>
+            
+        </div>
+
+        <!-- Problema 4 -->
+        <div class="relative bg-white rounded-lg shadow-xl overflow-hidden mb-8">
+            <h3 class="typography-grid-item-headline mx-4 mb-4 mt-2">Problema 4:</h3>
+            <div class="main-image-container">
+                <div class="problem-title">Problema 4</div>
+                <img
+                    :src="problems[3].images[problems[3].currentIndex].src"
+                    :alt="problems[3].images[problems[3].currentIndex].alt"
+                    class="main-image image-transition"
+                    @click="enterFullscreen(3, problems[3].currentIndex)"
+                >
+                
+            </div>
+            
+        </div>
+
+        <!-- Problema 5 -->
+        <div class="relative bg-white rounded-lg shadow-xl overflow-hidden mb-8">
+            <h3 class="typography-grid-item-headline mx-4 mb-4 mt-2">Problema 5:</h3>
+            <div class="main-image-container">
+                <div class="problem-title">Problema 5</div>
+                <img
+                    :src="problems[4].images[problems[4].currentIndex].src"
+                    :alt="problems[4].images[problems[4].currentIndex].alt"
+                    class="main-image image-transition"
+                    @click="enterFullscreen(4, problems[4].currentIndex)"
+                >
+                
+            </div>
+            
+        </div>
+        
+        <!-- Modo pantalla completa -->
+        <div v-if="fullscreen" class="fullscreen-mode" @click="handleCanvasClick">
+            <div class="fullscreen-image-container" @click.stop>
+                <div class="canvas-container">
+                    <img
+                        :src="currentProblem.images[currentProblem.fullscreenIndex].src"
+                        :alt="currentProblem.images[currentProblem.fullscreenIndex].alt"
+                        class="fullscreen-image"
+                        @load="handleImageLoad"
+                        ref="fullscreenImage"
+                    >
+                    <canvas 
+                        class="drawing-canvas" 
+                        ref="drawingCanvas"
+                        @mousedown="startDrawing"
+                        @mousemove="draw"
+                        @mouseup="stopDrawing"
+                        @mouseleave="stopDrawing"
+                        @touchstart.prevent="startDrawing"
+                        @touchmove.prevent="draw"
+                        @touchend.prevent="stopDrawing"
+                    ></canvas>
+                </div>
+            </div>
+
+            <div class="tools-panel">
+                <button @click.stop="setTool('pen')" class="tool-btn" title="Lápiz" :style="{ backgroundColor: currentTool === 'pen' ? '#4f46e5' : '' }">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                </button>
+                <button @click.stop="setTool('highlighter')" class="tool-btn" title="Resaltador" :style="{ backgroundColor: currentTool === 'highlighter' ? '#4f46e5' : '' }">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                </button>
+                <button @click.stop="clearCanvas" class="tool-btn" title="Borrar todo">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+                
+                <div class="color-picker">
+                    <div class="color-option" 
+                         style="background-color: #FFEB3B"
+                         :class="{ selected: currentColor === '#FFEB3B' }"
+                         @click.stop="setColor('#FFEB3B')"
+                         title="Amarillo"></div>
+                    <div class="color-option" 
+                         style="background-color: #F44336"
+                         :class="{ selected: currentColor === '#F44336' }"
+                         @click.stop="setColor('#F44336')"
+                         title="Rojo"></div>
+                    <div class="color-option" 
+                         style="background-color: #2196F3"
+                         :class="{ selected: currentColor === '#2196F3' }"
+                         @click.stop="setColor('#2196F3')"
+                         title="Azul"></div>
+                    <div class="color-option" 
+                         style="background-color: #4CAF50"
+                         :class="{ selected: currentColor === '#4CAF50' }"
+                         @click.stop="setColor('#4CAF50')"
+                         title="Verde"></div>
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <button @click.stop="nextImage" class="control-btn" title="Siguiente (→)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+                <button @click.stop="prevImage" class="control-btn" title="Anterior (←)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <button @click.stop="exitFullscreen" class="control-btn" title="Cerrar (ESC)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                // Estados reactivos
+                const fullscreen = ref(false);
+                const imageLoaded = ref(false);
+                const isDrawing = ref(false);
+                const currentTool = ref('pen');
+                const currentColor = ref('#FFEB3B');
+                const lastX = ref(0);
+                const lastY = ref(0);
+                const drawingCanvas = ref(null);
+                const fullscreenImage = ref(null);
+                const canvasContext = ref(null);
+                const currentProblemIndex = ref(0);
+                const currentProblem = ref(null);
+                const canvasScale = ref({ x: 1, y: 1 });
+
+                // Datos de los problemas
+                const problems = ref([
+                    {
+                        title: "Problema 1: Sistema de enfriamiento",
+                        currentIndex: 0,
+                        fullscreenIndex: 0,
+                        images: [
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1uLXQ-KrLMRbl9M8qYZd4eXE4T6v7dzPx&sz=w2900',
+                                alt: 'Samsung Tablet 1',
+                                description: 'Samsung Android Auto - 18°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1qkyxtMSP0R1MXwkO-jgBjteZH36xDwMw&sz=w2900',
+                                alt: 'Samsung Tablet 2',
+                                description: 'Samsung Android Auto - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1JG2JAeQVJeU9xUBJ7gdkQCD0Ai01E5xS&sz=w2900',
+                                alt: 'Samsung Tablet 3',
+                                description: 'Samsung Android Auto - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1CRinoplAR9-FEu60Vb3F8zOKemaZBgu9&sz=w2900',
+                                alt: 'Samsung Tablet 4',
+                                description: 'Samsung Android Auto - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1ix4U5XYM1WMKPvpGL0ETB3OPZeXD5SlG&sz=w2900',
+                                alt: 'Samsung Tablet 5',
+                                description: 'Samsung Android Auto - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1ZWBfJtiuNPwpAcg3u5MpS0Y2WGJXs0cA&sz=w2900',
+                                alt: 'Samsung Tablet 6',
+                                description: 'Samsung Android Auto - 21°'
+                            }
+                            
+                        ]
+                    },
+                    {
+                        title: "Problema 2: Falla eléctrica",
+                        currentIndex: 0,
+                        fullscreenIndex: 0,
+                        images: [
+                           {
+                                src: 'https://drive.google.com/thumbnail?id=1arz74e_ATqWnGG6UISbYRyEPXLAO05t5&sz=w2900',
+                                alt: 'Caratula',
+                                description: 'Ejercicio práctico de triángulos - 18°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=10AhBRFn4v2eSxGSGd3AURrq-8qWL1dBO&sz=w2900',
+                                alt: 'Ejercicio 1',
+                                description: 'Ejercicio práctico de triángulos - 18°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1SGJ1f36h61yab9l7_TAqrc9i8IYUV-QJ&sz=w2900',
+                                alt: 'Ejercicio 2',
+                                description: 'Ejercicio práctico de triángulos - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=19rw-PIRNSNa8GZae97jRcY49xvgs3B5E&sz=w2900',
+                                alt: 'Ejercicio 3',
+                                description: 'Ejercicio práctico de triángulos - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1dBO_Yxs--wsvTOr2ZTp-IqtCZhbAwobG&sz=w2900',
+                                alt: 'Ejercicio 4',
+                                description: 'Ejercicio práctico de triángulos - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1DF9lLXxHuarJiXgMsGWuo2AhsMrxKj_0&sz=w2900',
+                                alt: 'Ejercicio 5',
+                                description: 'Ejercicio práctico de triángulos - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1ivnTV2ht_OCnMa51qEMfMW9zfqN5mtpJ&sz=w2900',
+                                alt: 'Ejercicio 6',
+                                description: 'Ejercicio práctico de triángulos - 21°'
+                            }
+                            
+                        ]
+                    },
+                    {
+                        title: "Problema 3: Error de software",
+                        currentIndex: 0,
+                        fullscreenIndex: 0,
+                        images: [
+                             {
+                                src: 'https://drive.google.com/thumbnail?id=1UcSrTYetBGGDu7IU2UjKeerDsy5c-BO4&sz=w2900',
+                                alt: 'Samsung Tablet 1',
+                                description: 'Samsung Android Auto - 18°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1LVxmfl6xWqh4o7W3eSS1dB4e7NiABQ5J&sz=w2900',
+                                alt: 'Samsung Tablet 2',
+                                description: 'Samsung Android Auto - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1_vSLBiG8j-YMQoSOvosl0APbIWoAP52O&sz=w2900',
+                                alt: 'Samsung Tablet 3',
+                                description: 'Samsung Android Auto - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1xAMbPlJInjSJSN5oaVbwhRb4i0PkQvTr&sz=w2900',
+                                alt: 'Samsung Tablet 4',
+                                description: 'Samsung Android Auto - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1PDZRlBCUqHqmx4h-AvA1fTjRrRvw8y21&sz=w2900',
+                                alt: 'Samsung Tablet 5',
+                                description: 'Samsung Android Auto - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1gjkcYxEQlsOdiXVebtfzSvAvCqyRQ0pf&sz=w2900',
+                                alt: 'Samsung Tablet 6',
+                                description: 'Samsung Android Auto - 21°'
+                            }
+
+                        ]
+                    },
+                    {
+                        title: "Problema 4: Desgaste mecánico",
+                        currentIndex: 0,
+                        fullscreenIndex: 0,
+                        images: [
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1sC5dKlygGvttH0QZnYynNZoomPy9F4a5&sz=w2900',
+                                alt: 'Samsung Tablet 1',
+                                description: 'Samsung Android Auto - 18°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1ZjBHPsptbs692fvFEhxniy4pLK7hgk17&sz=w2900',
+                                alt: 'Samsung Tablet 2',
+                                description: 'Samsung Android Auto - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1MPvarif4aRzOg8H9qW2kY0zzqtMSCwKg&sz=w2900',
+                                alt: 'Samsung Tablet 3',
+                                description: 'Samsung Android Auto - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1IR9QlfJ9XfyaK0nC06F5BIOq-YjZFc48&sz=w2900',
+                                alt: 'Samsung Tablet 4',
+                                description: 'Samsung Android Auto - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1mXNdslXWTTGS47EQOIBQa6ljEQ2KPTyj&sz=w2900',
+                                alt: 'Samsung Tablet 5',
+                                description: 'Samsung Android Auto - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1c-ayUfU1-Np_KTdXoWkj76qRjPCVxW96&sz=w2900',
+                                alt: 'Samsung Tablet 6',
+                                description: 'Samsung Android Auto - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1qnE8M2YR4Z5hHDiUMfilyn1egZhw4R6Z&sz=w2900',
+                                alt: 'Samsung Tablet 7',
+                                description: 'Samsung Android Auto - 21°'
+                            }
+
+                        ]
+                    },
+                    {
+                        title: "Problema 5: Destino",
+                        currentIndex: 0,
+                        fullscreenIndex: 0,
+                        images: [
+                             {
+                                src: 'https://drive.google.com/thumbnail?id=1q4DHXP2pijbo5lldQfMOvg4RNEA1QCKo&sz=w2900',
+                                alt: 'Caratula',
+                                description: 'Ejercicio práctico de triángulos - 18°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1xM6sg-QHsr-e0jl9wvVJ77ABtVbx4nz2&sz=w2900',
+                                alt: 'Ejercicio 1',
+                                description: 'Ejercicio práctico de triángulos - 18°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1AAOXBGHseR7ttBL2_AZSwc-HkfWSjay0&sz=w2900',
+                                alt: 'Ejercicio 2',
+                                description: 'Ejercicio práctico de triángulos - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1_jaP7XwV6MQfjfE1_xaxVWDXsbAp3UGg&sz=w2900',
+                                alt: 'Ejercicio 3',
+                                description: 'Ejercicio práctico de triángulos - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1ElwgFZQMtmlJK20AxLjyzKYqLaqybMnO&sz=w2900',
+                                alt: 'Ejercicio 4',
+                                description: 'Ejercicio práctico de triángulos - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1NCgHnysAyCDLzawgpJJv_YHKg8a2GFYz&sz=w2900',
+                                alt: 'Ejercicio 5',
+                                description: 'Ejercicio práctico de triángulos - 21°'
+                            },
+                            {
+                                src: 'https://drive.google.com/thumbnail?id=1J4bHO3Nl_AbJiMLHDCMwjhx6Bwy6dDlX&sz=w2900',
+                                alt: 'Ejercicio 6',
+                                description: 'Ejercicio práctico de triángulos - 21°'
+                            }
+                           
+                        ]
+                    }
+                ]);
+
+                // Funciones de utilidad
+                const handleImageLoad = () => {
+                    imageLoaded.value = true;
+                    resizeCanvas();
+                };
+
+                const initCanvasContext = () => {
+                    if (!drawingCanvas.value) return;
+                    canvasContext.value = drawingCanvas.value.getContext('2d');
+                    canvasContext.value.lineJoin = 'round';
+                    canvasContext.value.lineCap = 'round';
+                    canvasContext.value.globalCompositeOperation = 'source-over';
+                };
+
+                const resizeCanvas = () => {
+                    if (!fullscreenImage.value || !drawingCanvas.value) return;
+                    
+                    const img = fullscreenImage.value;
+                    const container = img.parentElement;
+                    
+                    // Tamaño del contenedor
+                    const containerWidth = container.clientWidth;
+                    const containerHeight = container.clientHeight;
+                    
+                    // Relación de aspecto de la imagen
+                    const imgRatio = img.naturalWidth / img.naturalHeight;
+                    const containerRatio = containerWidth / containerHeight;
+                    
+                    // Calcular dimensiones de la imagen mostrada
+                    let imgWidth, imgHeight;
+                    
+                    if (containerRatio > imgRatio) {
+                        // Contenedor más ancho que la imagen (margen a los lados)
+                        imgHeight = containerHeight;
+                        imgWidth = imgHeight * imgRatio;
+                    } else {
+                        // Contenedor más alto que la imagen (margen arriba/abajo)
+                        imgWidth = containerWidth;
+                        imgHeight = imgWidth / imgRatio;
+                    }
+                    
+                    // Calcular escala
+                    canvasScale.value = {
+                        x: img.naturalWidth / imgWidth,
+                        y: img.naturalHeight / imgHeight
+                    };
+                    
+                    // Ajustar el canvas al tamaño real de la imagen
+                    drawingCanvas.value.width = img.naturalWidth;
+                    drawingCanvas.value.height = img.naturalHeight;
+                    
+                    // Posicionar el canvas sobre la imagen
+                    drawingCanvas.value.style.width = `${imgWidth}px`;
+                    drawingCanvas.value.style.height = `${imgHeight}px`;
+                    
+                    // Centrar el canvas
+                    drawingCanvas.value.style.left = `${(containerWidth - imgWidth) / 2}px`;
+                    drawingCanvas.value.style.top = `${(containerHeight - imgHeight) / 2}px`;
+                    
+                    // Inicializar el contexto del canvas
+                    initCanvasContext();
+                };
+
+                const getCanvasCoordinates = (clientX, clientY) => {
+                    const canvas = drawingCanvas.value;
+                    const rect = canvas.getBoundingClientRect();
+                    
+                    // Ajustar coordenadas según la escala
+                    return {
+                        x: (clientX - rect.left) * canvasScale.value.x,
+                        y: (clientY - rect.top) * canvasScale.value.y
+                    };
+                };
+
+                // Funciones de dibujo
+                const startDrawing = (e) => {
+                    isDrawing.value = true;
+                    const { clientX, clientY } = getEventCoordinates(e);
+                    const { x, y } = getCanvasCoordinates(clientX, clientY);
+                    lastX.value = x;
+                    lastY.value = y;
+                    
+                    // Iniciar un nuevo trazo
+                    if (canvasContext.value) {
+                        canvasContext.value.beginPath();
+                        canvasContext.value.moveTo(x, y);
+                        canvasContext.value.lineTo(x, y);
+                        canvasContext.value.stroke();
+                    }
+                };
+
+                const draw = (e) => {
+                    if (!isDrawing.value || !canvasContext.value) return;
+                    
+                    const { clientX, clientY } = getEventCoordinates(e);
+                    const { x, y } = getCanvasCoordinates(clientX, clientY);
+                    
+                    drawLine(lastX.value, lastY.value, x, y);
+                    
+                    lastX.value = x;
+                    lastY.value = y;
+                };
+
+                const getEventCoordinates = (e) => {
+                    return e.type.includes('touch') 
+                        ? { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }
+                        : { clientX: e.clientX, clientY: e.clientY };
+                };
+
+                const drawLine = (fromX, fromY, toX, toY) => {
+                    if (!canvasContext.value) return;
+                    
+                    canvasContext.value.beginPath();
+                    canvasContext.value.moveTo(fromX, fromY);
+                    canvasContext.value.lineTo(toX, toY);
+                    
+                    if (currentTool.value === 'pen') {
+                        canvasContext.value.globalAlpha = 1.0;
+                        canvasContext.value.lineWidth = 3;
+                    } else {
+                        canvasContext.value.globalAlpha = 0.5;
+                        canvasContext.value.lineWidth = 15;
+                    }
+                    
+                    canvasContext.value.strokeStyle = currentColor.value;
+                    canvasContext.value.stroke();
+                };
+
+                const stopDrawing = () => {
+                    isDrawing.value = false;
+                };
+
+                const clearCanvas = () => {
+                    if (canvasContext.value && drawingCanvas.value) {
+                        canvasContext.value.clearRect(0, 0, drawingCanvas.value.width, drawingCanvas.value.height);
+                    }
+                };
+
+                // Funciones de herramientas
+                const setTool = (tool) => {
+                    currentTool.value = tool;
+                };
+
+                const setColor = (color) => {
+                    currentColor.value = color;
+                };
+
+                // Funciones de navegación
+                const handleCanvasClick = (e) => {
+                    if (e.target === drawingCanvas.value) {
+                        e.stopPropagation();
+                    }
+                };
+
+                const enterFullscreen = (problemIndex, imageIndex) => {
+                    currentProblemIndex.value = problemIndex;
+                    currentProblem.value = problems.value[problemIndex];
+                    currentProblem.value.fullscreenIndex = imageIndex;
+                    fullscreen.value = true;
+                    document.body.style.overflow = 'hidden';
+                    imageLoaded.value = false;
+                    
+                    nextTick(() => {
+                        // Reiniciar el contexto del canvas al entrar en pantalla completa
+                        initCanvasContext();
+                        resizeCanvas();
+                        window.addEventListener('resize', resizeCanvas);
+                    });
+                };
+
+                const exitFullscreen = () => {
+                    fullscreen.value = false;
+                    document.body.style.overflow = 'auto';
+                    window.removeEventListener('resize', resizeCanvas);
+                };
+
+                const changeImage = (direction) => {
+                    const problem = currentProblem.value;
+                    problem.fullscreenIndex = (problem.fullscreenIndex + direction + problem.images.length) % problem.images.length;
+                    imageLoaded.value = false;
+                    nextTick(() => {
+                        // Reiniciar el contexto del canvas al cambiar de imagen
+                        initCanvasContext();
+                        resizeCanvas();
+                    });
+                };
+
+                const nextImage = () => changeImage(1);
+                const prevImage = () => changeImage(-1);
+
+                // Manejo de teclado
+                const handleKeydown = (event) => {
+                    if (!fullscreen.value) return;
+                    
+                    event.preventDefault();
+                    switch (event.key) {
+                        case 'Escape': exitFullscreen(); break;
+                        case 'ArrowRight':
+                        case ' ': nextImage(); break;
+                        case 'ArrowLeft': prevImage(); break;
+                    }
+                };
+
+                // Hooks del ciclo de vida
+                onMounted(() => {
+                    window.addEventListener('keydown', handleKeydown);
+                    currentProblem.value = problems.value[0];
+                    // Inicializar el contexto del canvas desde el principio
+                    nextTick(initCanvasContext);
+                });
+
+                onUnmounted(() => {
+                    window.removeEventListener('keydown', handleKeydown);
+                    window.removeEventListener('resize', resizeCanvas);
+                });
+
+                return {
+                    fullscreen,
+                    imageLoaded,
+                    isDrawing,
+                    currentTool,
+                    currentColor,
+                    problems,
+                    currentProblem,
+                    drawingCanvas,
+                    fullscreenImage,
+                    handleImageLoad,
+                    startDrawing,
+                    draw,
+                    stopDrawing,
+                    clearCanvas,
+                    setTool,
+                    setColor,
+                    handleCanvasClick,
+                    enterFullscreen,
+                    exitFullscreen,
+                    nextImage,
+                    prevImage
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
