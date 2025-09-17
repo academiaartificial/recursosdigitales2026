@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Sitio educativo sobre aritmética para primer grado de secundaria">
+    <title>Aritmética 1° Secundaria | Helico</title>
+    
+    <!-- Preconexión y preload para recursos críticos -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preload" href="https://unpkg.com/vue@3/dist/vue.global.js" as="script">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    transitionProperty: {
+                        'height': 'height',
+                        'max-height': 'max-height',
+                        'spacing': 'margin, padding',
+                        'transform': 'transform',
+                        'opacity': 'opacity',
+                        'size': 'width, height'
+                    },
+                    colors: {
+                        'apple-gray': '#f5f5f7',
+                        'apple-dark': '#1d1d1f',
+                        'apple-blue': '#0071e3',
+                        'lead': '#6b7280',
+                        'lead-dark': '#4b5563'
+                    },
+                    screens: {
+                        'xs': '480px',
+                        '3xl': '1800px'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Vue.js -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <style>
+        /* Animaciones */
+        .slide-enter-active,
+        .slide-leave-active {
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+            overflow: hidden;
+        }
+        .slide-enter-from,
+        .slide-leave-to {
+            max-height: 0 !important;
+            opacity: 0;
+        }
+        .slide-enter-to,
+        .slide-leave-from {
+            opacity: 1;
+        }
+
+        .fade-enter-active,
+        .fade-leave-active {
+            transition: opacity 0.3s ease;
+        }
+        .fade-enter-from,
+        .fade-leave-to {
+            opacity: 0;
+        }
+
+        /* Layout principal */
+        .image-accordion {
+            display: grid;
+            grid-template-columns: 1fr;
+            background-color: #f5f5f7;
+            border-radius: 1.75rem;
+            overflow: hidden;
+        }
+
+        @media (min-width: 1024px) {
+            .image-accordion {
+                grid-template-columns: 1fr 1fr;
+                min-height: 500px;
+            }
+        }
+
+        /* Tipografía */
+        .typography-section-header-headline {
+            font-size: 2rem;
+            line-height: 1;
+            font-weight: 500;
+            letter-spacing: -0.009em;
+            font-family: SF Pro Display, SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif;
+            background-image: linear-gradient(57deg, #f2425e, #f54e1a);
+            background-clip: text;
+            -webkit-text-fill-color: rgba(0, 0, 0, 0);
+        }
+        
+        .section-headline {
+            padding-bottom: 2rem;
+        }
+        
+        .typography-site-headline-elevated {
+            font-size: 80px;
+            line-height: 1.05;
+            font-weight: 600;
+            letter-spacing: -0.015em;
+            font-family: SF Pro Display, SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif;
+        }
+
+        .typography-headline-standalone {
+            font-size: 96px;
+            line-height: 1.04167;
+            font-weight: 600;
+            letter-spacing: -.015em;
+            font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+        }
+
+        .typography-manifesto {
+            font-size: 32px;
+            line-height: 1.25;
+            font-weight: 600;
+            letter-spacing: .004em;
+            font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+        }
+
+        .typography-headline {
+            font-size: 48px;
+            line-height: 1.0834933333;
+            font-weight: 600;
+            letter-spacing: -0.003em;
+            font-family: SF Pro Display, SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif;
+            color: #008ff7;
+        }
+
+        .typography-intro {
+            font-size: 21px;
+            line-height: 1.381002381;
+            font-weight: 400;
+            letter-spacing: .011em;
+            font-family: SF Pro Display, SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif;
+        }
+
+        /* Responsive typography */
+        @media (min-width: 768px) {
+            .typography-section-header-headline {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .typography-section-header-headline {
+                font-size: 4rem;
+            }
+        }
+
+        @media (max-width: 734px) {
+            .typography-site-headline-elevated {
+                font-size: 40px;
+                line-height: 1.1;
+                font-weight: 600;
+                letter-spacing: 0em;
+            }
+            .typography-headline-standalone {
+                font-size: 48px;
+                line-height: 1.08349;
+                font-weight: 600;
+                letter-spacing: -.003em;
+            }
+            .typography-manifesto {
+                font-size: 21px;
+                line-height: 1.19048;
+                font-weight: 600;
+                letter-spacing: .011em;
+            }
+        }
+
+        @media only screen and (max-width: 1068px) {
+            .typography-headline-standalone {
+                font-size: 70px;
+                line-height: 1.05;
+            }
+        }
+
+        /* Video responsive */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* Gallery styles */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #0071e3;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Section styles */
+        .section-hero {
+            background: black;
+            --card-background: #161617;
+            --card-text-color: white;
+            margin-top: -96px;
+            padding: 256px 0 180px;
+        }
+
+        .section-hero .section-content {
+            text-align: center;
+        }
+
+        .section-content {
+            margin-left: auto;
+            margin-right: auto;
+            width: 980px;
+        }
+
+        .section-hero .gradient-text {
+            background: linear-gradient(to right, #C85AD3, #E34787, #FF7B00);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            margin-bottom: 60px;
+            padding-bottom: 10px;
+        }
+
+        .section-hero p {
+            color: #86868b;
+        }
+
+        .section-success-story .copy-wrapper {
+            text-align: left;
+            padding-right: 65px;
+        }
+
+        .section-success-story .copy-wrapper .typography-headline {
+            margin-top: 10px;
+        }
+
+        .section-success-story picture {
+            display: flex;
+            border-radius: 40px;
+            overflow: hidden;
+        }
+
+        .copy-wrapper .typography-intro {
+            font-weight: 600;
+        }
+
+        .apple-intelligence-gradient {
+            background: #fff;
+            background-image: linear-gradient(90deg, #0090F7 8%, #BA62FC, #F2416B, #F55600);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: rgba(0, 0, 0, 0);
+        }
+
+        /* Tab navigation styles */
+        .tabnav {
+            --tabnav-link-color: #6e6e73;
+            --tabnav-link-color-hover: #424245;
+            --tabnav-bottom-border: #d2d2d7;
+            --tabnav-current-link-color: #1d1d1f;
+            --tabnav-current-bottom-border: #1d1d1f;
+            --tabnav-line-height: 1.2352941176;
+            --tabnav-lines: 1;
+            font-size: 17px;
+            height: 3.1764705882em;
+            overflow: hidden;
+            padding-bottom: calc((var(--tabnav-lines) * var(--tabnav-line-height) - var(--tabnav-line-height)) * 1em);
+            position: relative;
+            text-align: center;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .tabnav.with-icons {
+            height: 7.5294117647em;
+        }
+
+        .tabnav.with-2-lines {
+            --tabnav-lines: 2;
+        }
+
+        .tabnav-items {
+            margin-inline: 0;
+            min-width: 840px;
+            width: auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        .tabnav-item {
+            border-bottom: 1px solid var(--tabnav-bottom-border);
+            display: inline-block;
+            list-style: none;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 140px;
+            width: auto;
+        }
+
+        .tabnav-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .tabnav-item.current {
+            border-bottom-color: var(--tabnav-current-bottom-border);
+        }
+
+        .tabnav-link {
+            text-align: center;
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--tabnav-link-color);
+            transition: color 0.3s ease;
+        }
+
+        .tabnav-item.current .tabnav-link,
+        .tabnav-item .tabnav-link:hover {
+            color: var(--tabnav-current-link-color);
+        }
+
+        /* Card styles */
+        .dd-wrapper {
+            min-height: 509px;
+            height: 100%;
+            border-radius: 18px;
+            background-color: #f5f5f7;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateX(20px);
+            animation: slideInFade 0.5s ease forwards;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dd-wrapper .row {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+        }
+
+        .dd-wrapper .column {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        @media (min-width: 1024px) {
+            .dd-wrapper .row {
+                flex-direction: row;
+            }
+            .dd-wrapper .column {
+                width: 70%;
+            }
+        }
+
+        @keyframes slideInFade {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .dd-content {
+            width: 321px;
+            padding: 62px 0;
+            margin: 0 auto;
+        }
+
+        .t-eyebrow-elevated {
+            font-size: 28px;
+            line-height: 1.1428571429;
+            font-weight: 6;
+            letter-spacing: .007em;
+            font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            display: block;
+            margin-bottom: .4em;
+        }
+
+        .dd-glyph-gray-tertiary {
+            color: #86868b;
+        }
+
+        .dd-glyph-gray {
+            color: #1d1d1f;
+        }
+
+        .dd-button {
+            margin-top: 1.6em;
+        }
+
+        .button-elevated {
+            font-family: SF Pro Text, SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif;
+            font-size: 17px;
+            font-weight: 400;
+            letter-spacing: -.022em;
+            line-height: 1.1764805882;
+            background: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 980px;
+            padding: 12px 22px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .button-elevated:hover {
+            background: #0077ed;
+            transform: translateY(-1px);
+        }
+
+        .dd-table {
+            width: 100%;
+            margin: 1.5em 0;
+            border-collapse: collapse;
+        }
+
+        .dd-table th,
+        .dd-table td {
+            padding: 8px 0;
+            text-align: left;
+            border-bottom: 1px solid #e5e5e7;
+        }
+
+        .dd-table th {
+            font-size: 12px;
+            color: #86868b;
+            font-weight: 400;
+        }
+
+        .dd-table td {
+            font-size: 17px;
+            color: #1d1d1f;
+        }
+
+        .t-body {
+            font-size: 17px;
+            line-height: 1.4705882353;
+            font-weight: 400;
+            letter-spacing: -.022em;
+            font-family: "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        .t-body-reduced-tight {
+            font-size: 18px;
+            line-height: 1.2857142857;
+            font-weight: 400;
+            letter-spacing: -.016em;
+            font-family: "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        .dd-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 75px;
+        }
+
+        .dd-icon svg {
+            transition: transform 0.3s ease;
+        }
+
+        .tabnav-item:hover .dd-icon svg {
+            transform: scale(1.1);
+        }
+
+        .dd-image {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            height: 100%;
+            width: 100%;
+        }
+
+        .dd-hero {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .dd-hero:hover {
+            transform: scale(1.05);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .dd-content {
+                width: 100%;
+                padding: 40px 20px;
+            }
+
+            .tabnav-items {
+                min-width: auto;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                padding: 0 10px;
+            }
+
+            .tabnav-item {
+                padding: 10px;
+                min-width: 100px;
+                flex: 1 0 auto;
+            }
+
+            .tabnav.with-icons {
+                height: auto;
+                padding-bottom: 0;
+            }
+
+            .dd-icon {
+                height: 50px;
+            }
+
+            .dd-icon svg {
+                width: 40px;
+                height: 40px;
+            }
+
+            .t-eyebrow-elevated {
+                font-size: 24px;
+            }
+
+            .dd-wrapper {
+                min-height: auto;
+            }
+
+            .dd-wrapper .row {
+                flex-direction: column;
+            }
+
+            .dd-wrapper .column {
+                width: 100%;
+            }
+
+            .dd-wrapper .column.large-6.order-1 {
+                order: 2 !important;
+            }
+
+            .dd-wrapper .column.large-6.order-2 {
+                order: 1 !important;
+                padding-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .tabnav-item {
+                min-width: 80px;
+                padding: 5px;
+            }
+
+            .dd-icon {
+                height: 40px;
+            }
+
+            .dd-icon svg {
+                width: 30px;
+                height: 30px;
+            }
+        }
+
+        @media (max-width: 734px) {
+            .section-content {
+                width: 87.5%;
+            }
+            .section-hero .gradient-text {
+                margin-bottom: 30px;
+            }
+            .typography-headline {
+                font-size: 28px;
+                line-height: 1.1428571429;
+                font-weight: 6;
+                letter-spacing: .007em;
+            }
+            .typography-intro {
+                font-size: 19px;
+            }
+        }
+        
+        .align-items-center {
+            align-items: center;
+        }
+        
+        .section-heading {
+            text-align: center;
+        }
+       
+        /* Estilos personalizados */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Efecto hover para las tarjetas */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .headline {
+            font-size: 56px;
+            line-height: 1.07143;
+            font-weight: 600;
+            letter-spacing: -.005em;
+            font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+            background-image: linear-gradient(90deg, #0090F7 8%, #BA62FC, #F2416B, #F55600);  
+            -webkit-text-fill-color: rgba(0, 0, 0, 0);
+            
+            background-clip: text;   
+        }
+        .subhead {
+            font-size: 28px;
+            line-height: 1.14286;
+            font-weight: 400;
+            letter-spacing: .007em;
+            font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body class="bg-white antialiased">
+    <div id="app">
+        <!-- Sección hero -->
+        <section id="hero" class="section section-hero" data-analytics-section-engagement="name:hero">
+            <div class="section-content">
+                <h1 class="typography-headline-standalone gradient-text">Aritmética 1°</h1>
+                <p class="hero-copy typography-manifesto">
+                    Capítulo N° 1.
+                </p>
+            </div>
+        </section>
+
+        <!-- Título del tema -->
+        <div class="section-heading py-4" data-analytics-section-engagement="name:apple intelligence intro">
+            <h3 class="subsection-headline typography-site-headline-elevated large-12 medium-10 medium-centered small-12">
+                <span class="apple-intelligence-gradient">Tema:<span>Conjuntos.</span></span>
+            </h3>
+        </div>
+
+        <!-- Sección de video -->
+        <section class="bg-apple-gray py-12 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-6xl mx-auto">
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm max-w-4xl mx-auto">
+                    <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                            <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                            <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                        </div>
+                        <span class="text-4xl text-[#f2425e]">Motivating Strategy</span>
+                        <div class="w-12"></div>
+                    </div>
+                                    
+                    <div class="video-container">
+                        <iframe 
+                            src="https://www.youtube.com/embed/3qR0sRV2pPE?si=OXpgmF4ItYX61qz3"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen
+                            loading="lazy"
+                            title="Nuxt Test Utils - A Primer to Testing in Nuxt"
+                        ></iframe>
+                    </div>
+                </div>
+            </div>
+        </section>
+                
+        <!-- Sección de teoría -->
+        <section>
+            <div class="text-center mb-6 mt-6">
+                <h2 class="section-headline typography-section-header-headline mb-4">
+                    HelicoTheory.
+                </h2>
+            </div>
+
+            <section class="section section-success-story">
+                <div class="section-content">
+                    <div class="flex flex-col lg:flex-row justify-content-spacebetween align-items-center">
+                        <div class="column large-6 copy-wrapper small-12 lg:w-1/2 order-2 lg:order-1">
+                            <h3 class="typography-headline">Conjuntos</h3>
+                            <p class="typography-intro pt-6" data-text-zoom-max="1.5">
+                                Un conjunto es una colección o agrupación de objetos, elementos o cosas que tienen algo en común. Es como una "bolsa" donde guardamos elementos que comparten una característica específica.
+                            </p>
+                        </div>
+                        <div class="column large-6 small-12 lg:w-1/2 order-1 lg:order-2">
+                            <picture class="learn-to-code-teach">
+                                <img src="https://drive.google.com/thumbnail?id=1fB74GO8x6AEoEEBHSdIkD0IZp6s57_Si&sz=w1200" alt="Teoría de triángulos">
+                            </picture>
+                        </div>
+                    </div>
+                </div>
+            </section>
+                        
+            <!-- Carrusel acordeón -->
+            <main class="max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-10 py-8 md:py-12">
+                <div class="image-accordion shadow-lg max-w-6xl mx-auto">
+                    <!-- Lista de opciones -->
+                    <section aria-label="Conceptos de geometría" class="ImageAccordion py-[2rem] px-[1rem] md:py-[3rem] md:px-[1rem] lg:py-[5rem] lg:px-[3rem] flex flex-col justify-center">
+                        <ul class="space-y-1">
+                            <li v-for="(item, index) in theoryItems" :key="item.id" class="border-b border-gray-200 last:border-b-0">
+                                <button 
+                                    @click="selectTheoryItem(index)"
+                                    @keydown.enter="selectTheoryItem(index)"
+                                    @keydown.space.prevent="selectTheoryItem(index)"
+                                    :aria-expanded="selectedTheoryIndex === index"
+                                    :aria-controls="'panel-' + item.id"
+                                    class="accordion-button w-full text-left p-4 md:p-6 transition-all duration-200 focus:bg-[#f5f5f7]"
+                                    :class="{ 'bg-[#f5f5f7]': selectedTheoryIndex === index }"
+                                >
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xl md:text-2xl lg:text-3xl font-semibold text-gray-900">{{ item.text }}</span>
+                                        <svg 
+                                            class="w-6 h-6 md:w-8 md:h-8 transition-transform duration-300 text-gray-600"
+                                            :class="{ 'transform rotate-180': selectedTheoryIndex === index }"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            aria-hidden="true"
+                                        >
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </div>
+                                    <transition 
+                                        name="slide"
+                                        @enter="setMaxHeight"
+                                        @after-enter="clearMaxHeight"
+                                        @leave="setMaxHeight"
+                                    >
+                                        <div 
+                                            v-if="selectedTheoryIndex === index"
+                                            :id="'panel-' + item.id"
+                                            class="text-sm md:text-base lg:text-xl mt-3 text-gray-600 pr-8 md:pr-12"
+                                            role="region"
+                                        >
+                                            {{ item.description }}
+                                        </div>
+                                    </transition>
+                                </button>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <!-- Contenedor de imagen -->
+                    <section aria-label="Visualización del concepto" class="w-full h-full flex items-center justify-center p-4 md:p-6">
+                        <div class="relative w-full h-full flex items-center justify-center">
+                            <transition name="fade" mode="out-in">
+                                <div 
+                                    v-if="selectedTheoryImage"
+                                    :key="selectedTheoryImage"
+                                    class="w-full h-full flex items-center justify-center transition-opacity duration-300"
+                                >
+                                    <img 
+                                        :src="selectedTheoryImage"
+                                        :alt="'Imagen demostrativa: ' + theoryItems[selectedTheoryIndex].text"
+                                        class="w-auto h-auto max-w-full max-h-[80vh] md:max-h-[90vh] object-contain lazy-img"
+                                        loading="lazy"
+                                        width="1200"
+                                        height="800"
+                                        :style="{ 'view-transition-name': 'feature-image' }"
+                                        @error="handleImageError"
+                                    >
+                                </div>
+                            </transition>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </section>
+    </div>
+
+    <div class="section-content">
+            <div class="column large-6 copy-wrapper small-12 lg:w-1/2 order-2 lg:order-1">
+                <h3 class="typography-headline">Operaciones entre Conjuntos</h3>
+                    <p class="typography-intro pt-6" data-text-zoom-max="1.5">
+                                
+                    </p>
+            </div>
+    </div>                    
+
+    <div id="appDos" class="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-6xl">
+        <div class="as-l-fullwidth">
+            <div>
+                <div class="dd-tradein-value" data-analytics-section="TradeInValues">
+                    <div class="dd-l-plate">
+                        <div class="rf-dcm-tab">
+                            <div class="tabnav rf-dcmtab-tabnav with-icons with-2-lines">
+                                <ul class="tabnav-items">
+                                    <li 
+                                        v-for="(item, index) in items"
+                                        :key="index"
+                                        class="tabnav-item"
+                                        :class="{ current: selectedIndex === index }"
+                                        @click="selectItem(index)"
+                                    >
+                                        <button type="button" class="tabnav-link">
+                                            <span>
+                                                <div class="dd-icon" v-html="item.icon"></div>
+                                                <div class="t-body-reduced-tight">{{ item.name }}</div>
+                                            </span>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                                                    
+                            <div class="rf-dcmtab-panels">
+                                <div class="rf-dcmtab-panel">
+                                    <div class="dd-value-card" :class="{ 'dd-earth-day': selectedItem.isRecycling }">
+                                        <div class="dd-wrapper" :key="selectedIndex">
+                                            
+                                                <div class="column large-6 small-12">
+                                                    <div class="dd-image">
+                                                        <img 
+                                                            :src="selectedItem.image"
+                                                            :alt="selectedItem.imageAlt"
+                                                            class="dd-hero"
+                                                        >
+                                                    </div>
+                                                </div>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Helico Practice -->
+        <div class="container max-w-7xl mx-auto p-4 text-center">
+			<h2 class="headline">Helico Practice</h2>
+				<p class="subhead">Clic en boton para direccionar.</p>
+					<div class="cta-links m-8">
+					    <a class="button button-elevated button-primary" href="aritmetica1c1p.html" target="_self" rel="follow" 
+                            data-analytics-region="learn more" data-analytics-title="learn more - iphone" aria-label="Learn more, iPhone">
+                            Más Informe
+                        </a>
+					</div>
+		</div>
+
+     <!-- Helico Eventos -->
+    <div id="appTres" class="flex flex-col min-h-screen font-['Inter']">
+        <article class="flex-grow">
+            <section class="py-24 bg-gray-100">
+                <div class="container max-w-7xl mx-auto px-4">
+                    <!-- Título -->
+                    <div class="text-center mb-16 mx-auto">
+                        <h2 class="text-4xl md:text-5xl font-bold leading-tight tracking-tight typography-headline">
+                            {{ title }}
+                        </h2>
+                    </div>
+
+                    <!-- Galería deslizable -->
+                    <div class="relative">
+                        <!-- Contenedor de tarjetas con scroll -->
+                        <div class="overflow-x-auto pb-8 scrollbar-hide scroll-smooth" ref="scrollContainer">
+                            <div class="flex space-x-6 px-4">
+                                <!-- Tarjeta dinámica -->
+                                <div v-for="(card, index) in cards" :key="index" 
+                                     class="flex-shrink-0 w-[372px] p-8 bg-white rounded-3xl shadow-sm hover:shadow-md transition-shadow">
+                                    <img :src="card.image" :alt="card.title" class="w-10 h-10">
+                                    <h3 class="text-2xl font-bold mt-6 mb-4 typography-intro">{{ card.title }}</h3>
+                                    <p class="text-gray-600 mb-6 typography-intro">
+                                        {{ card.description }}
+                                    </p>
+                                    <a :href="card.link" class="text-blue-600 font-medium flex items-center group typography-intro">
+                                        {{ card.linkText }}
+                                        <span class="ml-1 transition-transform group-hover:translate-x-1">→</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Barra de progreso con indicadores -->
+                        <div class="mt-8 px-4">
+                            <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                <div 
+                                    class="h-full bg-gray-600 rounded-full transition-all duration-300"
+                                    :style="{ width: scrollProgress + '%' }"
+                                ></div>
+                            </div>
+                            <div class="flex justify-between mt-2">
+                                <span class="text-sm text-gray-500">Scroll position: {{ Math.round(scrollProgress) }}%</span>
+                                <span class="text-sm text-gray-500">{{ activeCardIndex + 1 }}/{{ cards.length }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Controles de navegación -->
+                        <div class="flex justify-center mt-6 space-x-4">
+                            <button 
+                                @click="scrollTo('left')"
+                                class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                :disabled="scrollPosition <= 0"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button 
+                                @click="scrollTo('right')"
+                                class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                :disabled="scrollPosition >= maxScroll"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </article>
+    </div>
+
+
+    
+    <script>
+        // App principal (teoría)
+        const app = Vue.createApp({
+            setup() {
+                const demoImages = {
+                    triangle: 'https://drive.google.com/thumbnail?id=1mYH9bbpmG7ojDHZRI2c-5g8CvM7pqWcH&sz=w1200',
+                    ipadMac: 'https://drive.google.com/thumbnail?id=1Ep8nggv745DbLZULs45pxBpQarmpDqp0&sz=w1200',
+                    ipadWatch: 'https://drive.google.com/thumbnail?id=1akraAyfYu7fLorv-0f61Jk3kMVtTmkRy&sz=w1200',
+                    conjunto: 'https://drive.google.com/thumbnail?id=1oaqajqyv39e0LohF3vY9luj1eoRSLLKj&sz=w1200'
+                };
+
+                const theoryItems = Vue.ref([
+                    { 
+                        id: 1,
+                        text: 'Conjuntos', 
+                        description: 'Noción', 
+                        image: demoImages.triangle
+                    },
+                    { 
+                        id: 2,
+                        text: 'Relación de pertenencia', 
+                        description: 'En el conjunto Q = { a; e; i; o; u }', 
+                        image: demoImages.ipadMac
+                    },
+                    { 
+                        id: 3,
+                        text: 'Cardinal de un conjunto', 
+                        description: 'El número cardinal de un conjunto se define como la medida del "número de elementos" en el conjunto.', 
+                        image: demoImages.ipadWatch
+                    },
+                    { 
+                        id: 4,
+                        text: 'Conjunto Potencia', 
+                        description: 'el conjunto potencia de un conjunto dado es otro conjunto formado por todos los subconjuntos del conjunto dado.', 
+                        image: demoImages.conjunto
+                    }
+                ]);
+
+                const selectedTheoryIndex = Vue.ref(0);
+                const selectedTheoryImage = Vue.ref(theoryItems.value[0].image);
+
+                const selectTheoryItem = (index) => {
+                    selectedTheoryIndex.value = index;
+                    selectedTheoryImage.value = theoryItems.value[index].image;
+                };
+
+                const setMaxHeight = (el) => {
+                    el.style.maxHeight = 'none';
+                    const height = el.scrollHeight + 'px';
+                    el.style.maxHeight = '0';
+                                    
+                    Vue.nextTick(() => {
+                        el.style.maxHeight = height;
+                    });
+                };
+
+                const clearMaxHeight = (el) => {
+                    el.style.maxHeight = 'none';
+                };
+
+                const handleImageError = (event) => {
+                    console.error('Error al cargar la imagen:', event.target.src);
+                };
+
+                return {
+                    theoryItems,
+                    selectedTheoryIndex,
+                    selectedTheoryImage,
+                    selectTheoryItem,
+                    setMaxHeight,
+                    clearMaxHeight,
+                    handleImageError
+                };
+            }
+        }).mount('#app');
+
+        // App secundaria (práctica)
+        const appDos = Vue.createApp({
+            setup() {
+                const items = Vue.ref([
+                    {
+                        name: "Unión",
+                        icon: `<svg height="75" viewBox="0 0 41 75" width="41"><path d="m0 0h41v75h-41z" fill="none"></path><path d="m14.2212 60c.3972 1.1187 1.0079 2.1338 1.7859 3h-10.0071c-3.3137 0-6-2.6863-6-6v-39c0-3.3137 2.6863-6 6-6h19c3.3137 0 6 2.6863 6 6v2h-3v-2c0-1.6542-1.3458-3-3-3h-19c-1.6542 0-3 1.3458-3 3v39c0 1.6542 1.3458 3 3 3zm-.7347-42.5c-1.9808.0332-1.9832 2.9665 0 3h5.0269c1.9808-.0332 1.9832-2.9665 0-3zm27.5135 11.5v28c0 3.3137-2.6863 6-6 6h-12c-2.2196 0-4.153-1.2084-5.1908-3-.5116-.8833-.8092-1.9058-.8092-3v-28c0-3.3137 2.6863-6 6-6 0 0 5.0001 0 5 0 2 0 5.277.032 7 0 3.3137 0 6 2.6863 6 6zm-6 31c1.6542 0 3-1.3458 3-3v-28c0-1.6542-1.3458-3-3-3h-12c-1.6542 0-3 1.3458-3 3v28c0 1.6542 1.3458 3 3 3zm-7.9631-28.5h3.9552c2.0247 0 1.9965-3 0-3h-3.9552c-1.9925 0-2.1052 3 0 3z"></path></svg>`,
+                        image: "https://drive.google.com/thumbnail?id=1UgUwFHcrpnBEL3J_k1SDtxb2Rd9lqbVx&sz=w1200",
+                        imageAlt: "Unión de conjuntos",
+                        buttonText: "Find your trade-in value",
+                        contentOrder: "small-order-2",
+                        imageOrder: "small-order-1",
+                        isRecycling: false
+                    },
+                    {
+                        name: "Intersección",
+                        icon: `<svg width="65" height="75" viewBox="0 0 65 75"><rect width="65" height="75" fill="none"></rect><path d="M50,15H15c-2.76,0-5,2.24-5,5v35c0,2.76,2.24,5,5,5h35c2.76,0,5-2.24,5-5V20C55,17.24,52.76,15,50,15z M52,55c0,1.1-0.9,2-2,2H15c-1.1,0-2-0.9-2-2V20c0-1.1,0.9-2,2-2h35c1.1,0,2,0.9,2,2V55z M32.5,25C39.4,25,45,30.6,45,37.5S39.4,50,32.5,50S20,44.4,20,37.5S25.6,25,32.5,25z"></path></svg>`,
+                        image: "https://drive.google.com/thumbnail?id=1FgVVX3OEGiYPnpWeqo0mfPdOuehDE90U&sz=w1200",
+                        imageAlt: "Intersección de conjuntos",
+                        buttonText: "Find your trade-in value",
+                        contentOrder: "small-order-2",
+                        imageOrder: "small-order-1",
+                        isRecycling: false
+                    },
+                    {
+                        name: "Diferencia",
+                        icon: `<svg height="75" viewBox="0 0 47 75" width="47"><path d="m0 0h47v75h-47z" fill="none"></path><path d="m12.0276 62c.5359 1.1232 1.2581 2.1394 2.1379 3h-6.6655c-4.1421 0-7.5-3.3579-7.5-7.5v-40c0-4.1421 3.3579-7.5 7.5-7.5h26c3.2852 0 6.0701 2.1157 7.0847 5.0563-.3567-.0367-.7185-.0563-1.0847-.0563h-2.2617c-.8086-1.2047-2.1816-2-3.7383-2h-26c-2.4812 0-4.5 2.0187-4.5 4.5v40c0 2.4813 2.0188 4.5 4.5 4.5zm34.9724-36.5v32c0 4.1421-3.3579 7.5-7.5 7.5h-18c-2.4512 0-4.6211-1.1814-5.9897-3-.9438-1.2544-1.5103-2.8092-1.5103-4.5v-32c0-4.1421 3.3579-7.5 7.5-7.5h18c.5137 0 1.0151.0522 1.5.1506 3.4233.6951 6 3.7211 6 7.3494zm-3 0c0-1.9529-1.2578-3.6023-3-4.2235-.4714-.1681-.9714-.2765-1.5-.2765h-18c-2.4812 0-4.5 2.0187-4.5 4.5v32c0 2.4813 2.0188 4.5 4.5 4.5h18c2.4812 0 4.5-2.0187 4.5-4.5z"></path></svg>`,
+                        image: "https://drive.google.com/thumbnail?id=1mI4rbG744-stAb-ZddOiT_hf3CWSt_jN&sz=w1200",
+                        imageAlt: "Diferencia de conjuntos",
+                        buttonText: "Shop iPad",
+                        contentOrder: "small-order-2",
+                        imageOrder: "small-order-1",
+                        isRecycling: false
+                    },
+                    {
+                        name: "Diferencia Simétrica",
+                        icon: `<svg width="74" height="75" viewBox="0 0 74 75"><g><rect width="74" height="75" fill="none"></rect><path d="M25.8813,61.5c0,.5285,.1084,1.0285,.2764,1.5h-3.6577c-.8286,0-1.5-.6714-1.5-1.5s.6714-1.5,1.5-1.5h.5v-6H5c-2.7615,0-5-2.2386-5-5V17c0-2.7614,2.2385-5,5-5H56c2.7615,0,5,2.2386,5,5v18h-3V17c0-1.1046-.8955-2-2-2H5c-1.1045,0-2,.8954-2,2v24.5c0,.8284,.6716,1.5,1.5,1.5H31v14h-.6187c-2.4812,0-4.5,2.0187-4.5,4.5Zm47,0c0,.8286-.6714,1.5-1.5,1.5H30.3813c-.8286,0-1.5-.6714-1.5-1.5s.6714-1.5,1.5-1.5h3.6187v-17.5c0-2.4853,2.0146-4.5,4.5-4.5h25c2.4854,0,4.5,2.0147,4.5,4.5v17.5h3.3813c.8286,0,1.5,.6714,1.5,1.5Zm-7.8813-19c0-.8271-.6729-1.5-1.5-1.5h-25c-.8271,0-1.5,.6729-1.5,1.5v17.5h28v-17.5Z"></path></g></svg>`,
+                        image: "https://drive.google.com/thumbnail?id=1QrVmF-y5f7d8zuZ5jYduP4Cq-mizMN1Y&sz=w1200",
+                        imageAlt: "Diferencia simétrica de conjuntos",
+                        buttonText: "Shop Mac",
+                        contentOrder: "small-order-2",
+                        imageOrder: "small-order-1",
+                        isRecycling: false
+                    },
+                    {
+                        name: "Complemento",
+                        icon: `<svg height="75" viewBox="0 0 31 75" width="31"><path d="m0 0h31v75h-31z" fill="none"></path><path d="m30.1071 15.0537c-.506-1.1963-1.4645-2.1548-2.6608-2.6608-.5983-.2531-1.2559-.3929-1.9463-.3929h-20c-.6904 0-1.348.1399-1.9463.3929-1.1963.506-2.1548 1.4645-2.6608 2.6608-.2531.5983-.3929 1.2559-.3929 1.9463v41c0 2.7615 2.2385 5 5 5h20c2.7615 0 5-2.2385 5-5v-41c0-.6904-.1399-1.348-.3929-1.9463zm-26.6071 1.9463c0-1.1028.8972-2 2-2h20c1.1028 0 2 .8972 2 2v37c0 1.1028-.8972 2-2 2h-20c-1.1028 0-2-.8972-2-2z"></path></svg>`,
+                        image: "https://drive.google.com/thumbnail?id=1gsqscRBKkRoTaQZI2y6CScZD_vfHI38t&sz=w1200",
+                        imageAlt: "Complemento de conjuntos",
+                        buttonText: "Find your trade-in value",
+                        contentOrder: "small-order-2",
+                        imageOrder: "small-order-1",
+                        isRecycling: false
+                    }
+                ]);
+
+                const selectedIndex = Vue.ref(0);
+                const selectedItem = Vue.ref(items.value[0]);
+
+                const selectItem = (index) => {
+                    selectedIndex.value = index;
+                    selectedItem.value = items.value[index];
+                };
+
+                return {
+                    items,
+                    selectedIndex,
+                    selectedItem,
+                    selectItem
+                };
+            }
+        }).mount('#appDos');
+
+        // App scroll
+        const appTres = Vue.createApp({
+            setup() {
+                // Datos reactivos
+                const scrollContainer = Vue.ref(null);
+                const scrollPosition = Vue.ref(0);
+                const maxScroll = Vue.ref(0);
+                const cardWidth = 336; // 80 (ancho) + 24 (padding)
+                
+                // Datos de la aplicación
+                const title = Vue.ref("Eventos para elegir");
+                
+                const cards = Vue.ref([
+                    {
+                        image: "https://www.apple.com/v/mac/mac-does-that/n/images/overview/even_more/icon_accessibility__ezt4xaqzh0qe_large.png",
+                        title: "Evento 1",
+                        description: "Every Mac comes with built-in accessibility features that are designed so everyone can do what they love in the ways that work best for them.",
+                        link: "https://support.apple.com/guide/mac-help/get-started-with-accessibility-features-mh35884/mac",
+                        linkText: "Learn more"
+                    },
+                    {
+                        image: "https://www.apple.com/v/mac/mac-does-that/n/images/overview/even_more/icon_environment__gjv2zmrajuqi_large.png",
+                        title: "Evento 2",
+                        description: "Mac is made with more recycled materials and responsible packaging than ever. And when you bring in your old PC, we'll recycle it for free.",
+                        link: "/environment/",
+                        linkText: "Learn more"
+                    },
+                    {
+                        image: "https://www.apple.com/v/mac/mac-does-that/n/images/overview/ways_to_save/icon_education__flewebczst2e_large.png",
+                        title: "Evento 3",
+                        description: "You want to do what's best for your family. So do we. Mac helps give you control over how your kids use their devices.",
+                        link: "/families/",
+                        linkText: "Learn more"
+                    },
+                    {
+                        image: "https://www.apple.com/v/mac/mac-does-that/n/images/overview/ways_to_save/icon_business__e5udf0bag50m_large.png",
+                        title: "Evento 4",
+                        description: "With Family Sharing, you can share apps, movies, music, and more with the people you love, so you don't all have to buy the same stuff over and over.",
+                        link: "/family-sharing/",
+                        linkText: "Learn more"
+                    },
+                    {
+                        image: "https://www.apple.com/v/mac/mac-does-that/n/images/overview/ways_to_save/icon_business__e5udf0bag50m_large.png",
+                        title: "Evento 5",
+                        description: "Mac is designed to protect your privacy and give you control over your information with built-in privacy features.",
+                        link: "/privacy/",
+                        linkText: "Learn more"
+                    }
+                ]);
+                
+                // Computed properties
+                const scrollProgress = Vue.computed(() => {
+                    return maxScroll.value > 0 ? (scrollPosition.value / maxScroll.value) * 100 : 0;
+                });
+                
+                const activeCardIndex = Vue.computed(() => {
+                    return Math.round(scrollPosition.value / cardWidth);
+                });
+                
+                // Métodos
+                const updateScrollValues = () => {
+                    if (scrollContainer.value) {
+                        scrollPosition.value = scrollContainer.value.scrollLeft;
+                        maxScroll.value = scrollContainer.value.scrollWidth - scrollContainer.value.clientWidth;
+                    }
+                };
+                
+                const scrollTo = (direction) => {
+                    if (!scrollContainer.value) return;
+                    
+                    const container = scrollContainer.value;
+                    const scrollAmount = container.clientWidth * 0.8;
+                    let targetScroll;
+                    
+                    if (direction === 'left') {
+                        targetScroll = Math.max(0, container.scrollLeft - scrollAmount);
+                    } else {
+                        targetScroll = Math.min(maxScroll.value, container.scrollLeft + scrollAmount);
+                    }
+                    
+                    container.scrollTo({
+                        left: targetScroll,
+                        behavior: 'smooth'
+                    });
+                };
+                
+                const scrollToCard = (index) => {
+                    if (!scrollContainer.value) return;
+                    
+                    const targetScroll = index * cardWidth;
+                    scrollContainer.value.scrollTo({
+                        left: targetScroll,
+                        behavior: 'smooth'
+                    });
+                };
+                
+                // Lifecycle hooks
+                Vue.onMounted(() => {
+                    if (scrollContainer.value) {
+                        scrollContainer.value.addEventListener('scroll', updateScrollValues);
+                        updateScrollValues();
+                        window.addEventListener('resize', updateScrollValues);
+                    }
+                });
+                
+                // Exposición al template
+                return {
+                    title,
+                    cards,
+                    scrollContainer,
+                    scrollPosition,
+                    maxScroll,
+                    scrollProgress,
+                    activeCardIndex,
+                    scrollTo,
+                    scrollToCard
+                };
+            }
+        }).mount('#appTres');
+    </script>
+</body>
+</html>
